@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css" crossorigin="">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <title>Login form - lamcodeofpwnosec</title>
+    <script>
+        let loginAttempts = 0;
+        const maxAttempts = 2;
+        let lockoutTime = 0;
+
+        function validateInput(event) {
+            const regex = /^[a-zA-Z0-9@.]+$/;
+            const inputs = document.querySelectorAll('.login__input');
+            for (let input of inputs) {
+                if (!regex.test(input.value)) {
+                    alert("Please use only letters, numbers, '@', or '.' in the input fields.");
+                    event.preventDefault();
+                    return;
+                }
+            }
+        }
+
+        function togglePasswordVisibility() {
+            const passwordField = document.getElementById("password");
+            const toggleIcon = document.getElementById("togglePassword");
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                toggleIcon.classList.replace("ri-eye-fill", "ri-eye-off-fill");
+            } else {
+                passwordField.type = "password";
+                toggleIcon.classList.replace("ri-eye-off-fill", "ri-eye-fill");
+            }
+        }
+
+        function preventPaste(event) {
+            event.preventDefault();
+            alert("Pasting is not allowed for security reasons.");
+        }
+
+        function enforcePasswordLength(event) {
+            const passwordField = document.getElementById("password");
+            if (passwordField.value.length < 8) {
+                alert("Password must be at least 8 characters long.");
+                event.preventDefault();
+            }
+        }
+
+        function checkBruteForce(event) {
+            if (loginAttempts >= maxAttempts) {
+                const currentTime = new Date().getTime();
+                if (currentTime < lockoutTime) {
+                    alert("Too many failed attempts. Please try again later.");
+                    event.preventDefault();
+                    return;
+                } else {
+                    loginAttempts = 0;
+                }
+            }
+        }
+
+        function handleLogin(event) {
+            checkBruteForce(event);
+            validateInput(event);
+            enforcePasswordLength(event);
+
+            if (!event.defaultPrevented) {
+                loginAttempts = 0;
+                event.preventDefault();
+                showSuccessPopup();
+            } else {
+                loginAttempts++;
+                if (loginAttempts >= maxAttempts) {
+                    lockoutTime = new Date().getTime() + 5 * 60 * 1000;
+                    alert("Too many failed login attempts. Please wait 5 minutes before trying again.");
+                }
+            }
+        }
+
+        function showSuccessPopup() {
+            const popup = document.createElement("div");
+            popup.innerHTML = "<div class='popup'><p>Login Successful!</p><button onclick='closePopup()'>OK</button></div>";
+            popup.classList.add("popup-container");
+            document.body.appendChild(popup);
+        }
+
+        function closePopup() {
+            document.querySelector(".popup-container").remove();
+        }
+
+        let inactivityTime = function() {
+            let time;
+            function resetTimer() {
+                clearTimeout(time);
+                time = setTimeout(() => {
+                    alert("Session expired due to inactivity. Please log in again.");
+                    window.location.reload();
+                }, 10 * 60 * 1000);
+            }
+            document.onmousemove = resetTimer;
+            document.onkeypress = resetTimer;
+        };
+        window.onload = inactivityTime;
+
+        function addCaptcha() {
+            const captchaContainer = document.getElementById("captchaContainer");
+            captchaContainer.innerHTML = `<label for='captcha'>Enter CAPTCHA:</label>
+                                          <input type='text' id='captchaInput' required>
+                                          <span id='captchaText'></span>
+                                          <button type='button' onclick='generateCaptcha()'>Refresh</button>`;
+            generateCaptcha();
+        }
+
+        function generateCaptcha() {
+            const captchaText = Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById("captchaText").innerText = captchaText;
+        }
+
+        function validateCaptcha(event) {
+            const userCaptcha = document.getElementById("captchaInput").value;
+            const actualCaptcha = document.getElementById("captchaText").innerText;
+            if (userCaptcha !== actualCaptcha) {
+                alert("Incorrect CAPTCHA. Please try again.");
+                event.preventDefault();
+                generateCaptcha();
+            }
+        }
+    </script>
+    <style>
+        .popup-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .popup {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body onload="addCaptcha()">
+    <div class="login">
+        <img src="assets/img/login-bg.png" alt="image" class="login__bg">
+
+        <form class="login__form" onsubmit="handleLogin(event); validateCaptcha(event);">
+            <h1 class="login__title">Login</h1>
+
+            <div class="login__inputs">
+                <div class="login__box">
+                    <input type="email" placeholder="Email ID" required class="login__input">
+                    <i class="ri-mail-fill"></i>
+                </div>
+
+                <div class="login__box">
+                    <input type="password" id="password" placeholder="Password (min 8 characters)" required class="login__input" onpaste="preventPaste(event)">
+                    <i class="ri-eye-fill" id="togglePassword" style="cursor: pointer;" onclick="togglePasswordVisibility()"></i>
+                </div>
+            </div>
+
+            <div id="captchaContainer"></div>
+
+            <div class="login__check">
+                <div class="login__check-box">
+                    <input type="checkbox" class="login__check-input" id="user-check">
+                    <label for="user-check" class="login__check-label">Remember me</label>
+                </div>
+                <a href="#" class="login__forgot">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="login__button">Login</button>
+
+            <div class="login__register">
+                Don't have an account? <a href="#">Register</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
