@@ -29,7 +29,8 @@
                     alert("OTP has been sent to your email!");
                     document.getElementById("otpInputContainer").style.display = 'block';  // Show OTP input
                     document.getElementById("emailInput").disabled = true;  // Disable email input
-                    document.getElementById("submitEmailButton").disabled = true;  // Disable submit button
+                    document.getElementById("passwordInput").disabled = true;  // Disable password input
+                    document.getElementById("submitPasswordButton").disabled = true;  // Disable submit button
                 }
             } catch (error) {
                 console.error("Error during login: ", error);
@@ -43,22 +44,25 @@
                 if (error) {
                     alert("OTP Verification failed: " + error.message);
                 } else {
-                    alert("Login successful!");
-                    // Handle successful login, e.g., redirect the user to another page
+                    showSuccessPopup();
                 }
             } catch (error) {
                 alert("Error verifying OTP: " + error.message);
             }
         }
 
-        // Handle Login by email
+        // Handle Login by email and password
         function handleLogin(event) {
             event.preventDefault();
             checkBruteForce(event);
 
             const emailInput = document.querySelector('input[type="email"]');
-            if (emailInput.value) {
+            const passwordInput = document.querySelector('input[type="password"]');
+
+            if (emailInput.value && passwordInput.value) {
                 loginWithEmailOTP(emailInput.value);
+            } else {
+                alert("Please enter both email and password.");
             }
         }
 
@@ -112,6 +116,20 @@
                 generateCaptcha();
             }
         }
+
+        // Show Success Popup after OTP verification
+        function showSuccessPopup() {
+            const popup = document.createElement("div");
+            popup.innerHTML = "<div class='popup'><p>Login Successful!</p><button onclick='closePopup()'>OK</button></div>";
+            popup.classList.add("popup-container");
+            document.body.appendChild(popup);
+        }
+
+        // Close the success popup
+        function closePopup() {
+            document.querySelector(".popup-container").remove();
+            window.location.href = "/home";  // Redirect after successful login (or any page)
+        }
     </script>
     <style>
         .popup-container {
@@ -148,6 +166,10 @@
                     <input type="email" id="emailInput" placeholder="Email ID" class="login__input" required>
                     <i class="ri-mail-fill"></i>
                 </div>
+                <div class="login__box">
+                    <input type="password" id="passwordInput" placeholder="Password" class="login__input" required>
+                    <i class="ri-lock-fill"></i>
+                </div>
             </div>
 
             <div id="captchaContainer"></div>
@@ -160,7 +182,7 @@
                 <a href="#" class="login__forgot">Forgot Password?</a>
             </div>
 
-            <button type="submit" id="submitEmailButton" class="login__button">Send OTP</button>
+            <button type="submit" id="submitPasswordButton" class="login__button">Send OTP</button>
         </form>
 
         <!-- OTP input form -->
