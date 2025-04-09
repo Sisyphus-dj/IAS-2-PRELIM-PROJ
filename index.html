@@ -21,11 +21,14 @@
 
         // Function to send OTP to the email
         async function loginWithEmailOTP(email) {
+            console.log("Attempting to send OTP for email:", email); // Debugging
             try {
                 const { error } = await supabase.auth.signInWithOtp({ email });
                 if (error) {
+                    console.error("Error sending OTP:", error.message); // Debugging
                     alert("Error sending OTP: " + error.message);
                 } else {
+                    console.log("OTP sent successfully!"); // Debugging
                     alert("OTP has been sent to your email!");
                     document.getElementById("otpInputContainer").style.display = 'block';  // Show OTP input
                     document.getElementById("emailInput").disabled = true;  // Disable email input
@@ -33,20 +36,24 @@
                     document.getElementById("submitPasswordButton").disabled = true;  // Disable submit button
                 }
             } catch (error) {
-                console.error("Error during login: ", error);
+                console.error("Error during login:", error); // Debugging
             }
         }
 
         // Function to verify OTP
         async function verifyOTP(email, otp) {
+            console.log("Verifying OTP:", otp); // Debugging
             try {
                 const { user, error } = await supabase.auth.verifyOtp({ email, token: otp });
                 if (error) {
+                    console.error("OTP Verification failed:", error.message); // Debugging
                     alert("OTP Verification failed: " + error.message);
                 } else {
+                    console.log("OTP verified successfully!"); // Debugging
                     showSuccessPopup();
                 }
             } catch (error) {
+                console.error("Error verifying OTP:", error); // Debugging
                 alert("Error verifying OTP: " + error.message);
             }
         }
@@ -92,31 +99,6 @@
             }
         }
 
-        // Add CAPTCHA (optional)
-        function addCaptcha() {
-            const captchaContainer = document.getElementById("captchaContainer");
-            captchaContainer.innerHTML = `<label for='captcha'>Enter CAPTCHA:</label>
-                                          <input type='text' id='captchaInput' required>
-                                          <span id='captchaText'></span>
-                                          <button type='button' onclick='generateCaptcha()'>Refresh</button>`;
-            generateCaptcha();
-        }
-
-        function generateCaptcha() {
-            const captchaText = Math.random().toString(36).substring(2, 8).toUpperCase();
-            document.getElementById("captchaText").innerText = captchaText;
-        }
-
-        function validateCaptcha(event) {
-            const userCaptcha = document.getElementById("captchaInput").value;
-            const actualCaptcha = document.getElementById("captchaText").innerText;
-            if (userCaptcha !== actualCaptcha) {
-                alert("Incorrect CAPTCHA. Please try again.");
-                event.preventDefault();
-                generateCaptcha();
-            }
-        }
-
         // Show Success Popup after OTP verification
         function showSuccessPopup() {
             const popup = document.createElement("div");
@@ -131,6 +113,7 @@
             window.location.href = "/home";  // Redirect after successful login (or any page)
         }
     </script>
+
     <style>
         .popup-container {
             position: fixed;
