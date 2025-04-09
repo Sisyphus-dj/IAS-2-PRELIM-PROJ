@@ -1,163 +1,188 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css" crossorigin="">
-    <link rel="stylesheet" href="assets/css/styles.css">
-    <title>Email OTP Login - lamcodeofpwnosec</title>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0-beta.1/dist/supabase.min.js"></script>
-
-    <script>
-        // Initialize Supabase Client
-        const supabaseUrl = 'https://egmhxsmsblmcdetcpmdh.supabase.co';  // Replace with your Supabase URL
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnbWh4c21zYmxtY2RldGNwbWRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxNzY5MTUsImV4cCI6MjA1OTc1MjkxNX0.1AA8sY9u6mFBPA4_H0Agu85Ojp7v7BlybxcHNoaf_CA';  // Replace with your Supabase anon key
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-        // Function to send OTP to the email
-        async function loginWithEmailOTP(email) {
-            console.log("Sending OTP for email:", email); // Debugging
-
-            try {
-                const { error } = await supabase.auth.signInWithOtp({ email });
-                if (error) {
-                    console.error("Error sending OTP:", error.message); // Debugging
-                    alert("Error sending OTP: " + error.message);
-                } else {
-                    console.log("OTP sent successfully!"); // Debugging
-                    alert("OTP has been sent to your email!");
-                    document.getElementById("otpInputContainer").style.display = 'block';  // Show OTP input
-                    document.getElementById("emailInput").disabled = true;  // Disable email input
-                    document.getElementById("passwordInput").disabled = true;  // Disable password input
-                    document.getElementById("submitPasswordButton").disabled = true;  // Disable submit button
-                }
-            } catch (error) {
-                console.error("Error during login:", error); // Debugging
-            }
-        }
-
-        // Handle Login by email and password
-        function handleLogin(event) {
-            event.preventDefault(); // Prevent form submission to handle login logic
-            
-            const emailInput = document.querySelector('input[type="email"]');
-            const passwordInput = document.querySelector('input[type="password"]');
-
-            // Check that both email and password are entered
-            if (emailInput.value && passwordInput.value) {
-                console.log("Email and password entered, proceeding to send OTP"); // Debugging
-                loginWithEmailOTP(emailInput.value);
-            } else {
-                alert("Please enter both email and password.");
-            }
-        }
-
-        // Handle OTP submission
-        function handleOTPSubmit(event) {
-            event.preventDefault(); // Prevent form submission to handle OTP verification
-            
-            const email = document.querySelector('input[type="email"]').value;
-            const otpInput = document.getElementById("otpInput").value;
-
-            // Check if OTP is entered
-            if (otpInput) {
-                console.log("Verifying OTP:", otpInput); // Debugging
-                verifyOTP(email, otpInput);
-            } else {
-                alert("Please enter the OTP.");
-            }
-        }
-
-        // Function to verify OTP
-        async function verifyOTP(email, otp) {
-            try {
-                const { user, error } = await supabase.auth.verifyOtp({ email, token: otp });
-                if (error) {
-                    alert("OTP Verification failed: " + error.message);
-                } else {
-                    showSuccessPopup();  // Call this function when OTP is successfully verified
-                }
-            } catch (error) {
-                alert("Error verifying OTP: " + error.message);
-            }
-        }
-
-        // Show Success Popup after OTP verification
-        function showSuccessPopup() {
-            const popup = document.createElement("div");
-            popup.innerHTML = "<div class='popup'><p>Login Successful!</p><button onclick='closePopup()'>OK</button></div>";
-            popup.classList.add("popup-container");
-            document.body.appendChild(popup);
-        }
-
-        // Close the success popup
-        function closePopup() {
-            document.querySelector(".popup-container").remove();
-            window.location.href = "/home";  // Redirect after successful login (or any page)
-        }
-    </script>
-
-    <style>
-        .popup-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .popup {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .otp-container {
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="login">
-        <img src="assets/img/login-bg.png" alt="image" class="login__bg">
-
-        <form class="login__form" onsubmit="handleLogin(event)">
-            <h1 class="login__title">Login</h1>
-
-            <div class="login__inputs">
-                <div class="login__box">
-                    <input type="email" id="emailInput" placeholder="Email ID" class="login__input" required>
-                    <i class="ri-mail-fill"></i>
-                </div>
-                <div class="login__box">
-                    <input type="password" id="passwordInput" placeholder="Password" class="login__input" required>
-                    <i class="ri-lock-fill"></i>
-                </div>
-            </div>
-
-            <div class="login__check">
-                <div class="login__check-box">
-                    <input type="checkbox" class="login__check-input" id="user-check">
-                    <label for="user-check" class="login__check-label">Remember me</label>
-                </div>
-                <a href="#" class="login__forgot">Forgot Password?</a>
-            </div>
-
-            <button type="submit" id="submitPasswordButton" class="login__button">Send OTP</button>
-        </form>
-
-        <!-- OTP input form -->
-        <div id="otpInputContainer" class="otp-container">
-            <h2>Enter OTP</h2>
-            <form onsubmit="handleOTPSubmit(event)">
-                <input type="text" id="otpInput" placeholder="Enter OTP" required>
-                <button type="submit" class="login__button">Verify OTP</button>
-            </form>
-        </div>
-    </div>
-</body>
-</html>
+ <html lang="en">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css" crossorigin="">
+     <link rel="stylesheet" href="assets/css/styles.css">
+     <title>Login form - lamcodeofpwnosec</title>
+     <script>
+         let loginAttempts = 0;
+         const maxAttempts = 2;
+         let lockoutTime = 0;
+ 
+         function validateInput(event) {
+             const regex = /^[a-zA-Z0-9@.]+$/;
+             const inputs = document.querySelectorAll('.login__input');
+             for (let input of inputs) {
+                 if (!regex.test(input.value)) {
+                     alert("Please use only letters, numbers, '@', or '.' in the input fields.");
+                     event.preventDefault();
+                     return;
+                 }
+             }
+         }
+ 
+         function togglePasswordVisibility() {
+             const passwordField = document.getElementById("password");
+             const toggleIcon = document.getElementById("togglePassword");
+             if (passwordField.type === "password") {
+                 passwordField.type = "text";
+                 toggleIcon.classList.replace("ri-eye-fill", "ri-eye-off-fill");
+             } else {
+                 passwordField.type = "password";
+                 toggleIcon.classList.replace("ri-eye-off-fill", "ri-eye-fill");
+             }
+         }
+ 
+         function preventPaste(event) {
+             event.preventDefault();
+             alert("Pasting is not allowed for security reasons.");
+         }
+ 
+         function enforcePasswordLength(event) {
+             const passwordField = document.getElementById("password");
+             if (passwordField.value.length < 8) {
+                 alert("Password must be at least 8 characters long.");
+                 event.preventDefault();
+             }
+         }
+ 
+         function checkBruteForce(event) {
+             if (loginAttempts >= maxAttempts) {
+                 const currentTime = new Date().getTime();
+                 if (currentTime < lockoutTime) {
+                     alert("Too many failed attempts. Please try again later.");
+                     event.preventDefault();
+                     return;
+                 } else {
+                     loginAttempts = 0;
+                 }
+             }
+         }
+ 
+         function handleLogin(event) {
+             checkBruteForce(event);
+             validateInput(event);
+             enforcePasswordLength(event);
+ 
+             if (!event.defaultPrevented) {
+                 loginAttempts = 0;
+                 event.preventDefault();
+                 showSuccessPopup();
+             } else {
+                 loginAttempts++;
+                 if (loginAttempts >= maxAttempts) {
+                     lockoutTime = new Date().getTime() + 5 * 60 * 1000;
+                     alert("Too many failed login attempts. Please wait 5 minutes before trying again.");
+                 }
+             }
+         }
+ 
+         function showSuccessPopup() {
+             const popup = document.createElement("div");
+             popup.innerHTML = "<div class='popup'><p>Login Successful!</p><button onclick='closePopup()'>OK</button></div>";
+             popup.classList.add("popup-container");
+             document.body.appendChild(popup);
+         }
+ 
+         function closePopup() {
+             document.querySelector(".popup-container").remove();
+         }
+ 
+         let inactivityTime = function() {
+             let time;
+             function resetTimer() {
+                 clearTimeout(time);
+                 time = setTimeout(() => {
+                     alert("Session expired due to inactivity. Please log in again.");
+                     window.location.reload();
+                 }, 10 * 60 * 1000);
+             }
+             document.onmousemove = resetTimer;
+             document.onkeypress = resetTimer;
+         };
+         window.onload = inactivityTime;
+ 
+         function addCaptcha() {
+             const captchaContainer = document.getElementById("captchaContainer");
+             captchaContainer.innerHTML = `<label for='captcha'>Enter CAPTCHA:</label>
+                                           <input type='text' id='captchaInput' required>
+                                           <span id='captchaText'></span>
+                                           <button type='button' onclick='generateCaptcha()'>Refresh</button>`;
+             generateCaptcha();
+         }
+ 
+         function generateCaptcha() {
+             const captchaText = Math.random().toString(36).substring(2, 8).toUpperCase();
+             document.getElementById("captchaText").innerText = captchaText;
+         }
+ 
+         function validateCaptcha(event) {
+             const userCaptcha = document.getElementById("captchaInput").value;
+             const actualCaptcha = document.getElementById("captchaText").innerText;
+             if (userCaptcha !== actualCaptcha) {
+                 alert("Incorrect CAPTCHA. Please try again.");
+                 event.preventDefault();
+                 generateCaptcha();
+             }
+         }
+     </script>
+     <style>
+         .popup-container {
+             position: fixed;
+             top: 0;
+             left: 0;
+             width: 100%;
+             height: 100%;
+             background: rgba(0, 0, 0, 0.5);
+             display: flex;
+             justify-content: center;
+             align-items: center;
+         }
+         .popup {
+             background: white;
+             padding: 20px;
+             border-radius: 8px;
+             text-align: center;
+         }
+     </style>
+ </head>
+ <body onload="addCaptcha()">
+     <div class="login">
+         <img src="assets/img/login-bg.png" alt="image" class="login__bg">
+ 
+         <form class="login__form" onsubmit="handleLogin(event); validateCaptcha(event);">
+             <h1 class="login__title">Login</h1>
+ 
+             <div class="login__inputs">
+                 <div class="login__box">
+                     <input type="email" placeholder="Email ID" required class="login__input">
+                     <i class="ri-mail-fill"></i>
+                 </div>
+ 
+                 <div class="login__box">
+                     <input type="password" id="password" placeholder="Password (min 8 characters)" required class="login__input" onpaste="preventPaste(event)">
+                     <i class="ri-eye-fill" id="togglePassword" style="cursor: pointer;" onclick="togglePasswordVisibility()"></i>
+                 </div>
+             </div>
+ 
+             <div id="captchaContainer"></div>
+ 
+             <div class="login__check">
+                 <div class="login__check-box">
+                     <input type="checkbox" class="login__check-input" id="user-check">
+                     <label for="user-check" class="login__check-label">Remember me</label>
+                 </div>
+                 <a href="#" class="login__forgot">Forgot Password?</a>
+             </div>
+ 
+             <button type="submit" class="login__button">Login</button>
+ 
+             <div class="login__register">
+                 Don't have an account? <a href="#">Register</a>
+             </div>
+         </form>
+     </div>
+ </body>
+ </html>
