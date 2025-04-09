@@ -15,13 +15,10 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnbWh4c21zYmxtY2RldGNwbWRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxNzY5MTUsImV4cCI6MjA1OTc1MjkxNX0.1AA8sY9u6mFBPA4_H0Agu85Ojp7v7BlybxcHNoaf_CA';  // Replace with your Supabase anon key
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        let loginAttempts = 0;
-        const maxAttempts = 2;
-        let lockoutTime = 0;
-
         // Function to send OTP to the email
         async function loginWithEmailOTP(email) {
-            console.log("Attempting to send OTP for email:", email); // Debugging
+            console.log("Sending OTP for email:", email); // Debugging
+
             try {
                 const { error } = await supabase.auth.signInWithOtp({ email });
                 if (error) {
@@ -40,33 +37,16 @@
             }
         }
 
-        // Function to verify OTP
-        async function verifyOTP(email, otp) {
-            console.log("Verifying OTP:", otp); // Debugging
-            try {
-                const { user, error } = await supabase.auth.verifyOtp({ email, token: otp });
-                if (error) {
-                    console.error("OTP Verification failed:", error.message); // Debugging
-                    alert("OTP Verification failed: " + error.message);
-                } else {
-                    console.log("OTP verified successfully!"); // Debugging
-                    showSuccessPopup();
-                }
-            } catch (error) {
-                console.error("Error verifying OTP:", error); // Debugging
-                alert("Error verifying OTP: " + error.message);
-            }
-        }
-
         // Handle Login by email and password
         function handleLogin(event) {
-            event.preventDefault();
-            checkBruteForce(event);
-
+            event.preventDefault(); // Prevent form submission to handle login logic
+            
             const emailInput = document.querySelector('input[type="email"]');
             const passwordInput = document.querySelector('input[type="password"]');
 
+            // Check that both email and password are entered
             if (emailInput.value && passwordInput.value) {
+                console.log("Email and password entered, proceeding to send OTP"); // Debugging
                 loginWithEmailOTP(emailInput.value);
             } else {
                 alert("Please enter both email and password.");
@@ -75,27 +55,31 @@
 
         // Handle OTP submission
         function handleOTPSubmit(event) {
-            event.preventDefault();
+            event.preventDefault(); // Prevent form submission to handle OTP verification
+            
             const email = document.querySelector('input[type="email"]').value;
             const otpInput = document.getElementById("otpInput").value;
+
+            // Check if OTP is entered
             if (otpInput) {
+                console.log("Verifying OTP:", otpInput); // Debugging
                 verifyOTP(email, otpInput);
             } else {
                 alert("Please enter the OTP.");
             }
         }
 
-        // Prevent brute force attacks by limiting failed login attempts
-        function checkBruteForce(event) {
-            if (loginAttempts >= maxAttempts) {
-                const currentTime = new Date().getTime();
-                if (currentTime < lockoutTime) {
-                    alert("Too many failed attempts. Please try again later.");
-                    event.preventDefault();
-                    return;
+        // Function to verify OTP
+        async function verifyOTP(email, otp) {
+            try {
+                const { user, error } = await supabase.auth.verifyOtp({ email, token: otp });
+                if (error) {
+                    alert("OTP Verification failed: " + error.message);
                 } else {
-                    loginAttempts = 0;
+                    showSuccessPopup();  // Call this function when OTP is successfully verified
                 }
+            } catch (error) {
+                alert("Error verifying OTP: " + error.message);
             }
         }
 
@@ -137,11 +121,11 @@
         }
     </style>
 </head>
-<body onload="addCaptcha()">
+<body>
     <div class="login">
         <img src="assets/img/login-bg.png" alt="image" class="login__bg">
 
-        <form class="login__form" onsubmit="handleLogin(event); validateCaptcha(event);">
+        <form class="login__form" onsubmit="handleLogin(event)">
             <h1 class="login__title">Login</h1>
 
             <div class="login__inputs">
@@ -154,8 +138,6 @@
                     <i class="ri-lock-fill"></i>
                 </div>
             </div>
-
-            <div id="captchaContainer"></div>
 
             <div class="login__check">
                 <div class="login__check-box">
